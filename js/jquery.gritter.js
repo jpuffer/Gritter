@@ -290,7 +290,7 @@
 		removeSpecific: function(unique_id, params, e, unbind_events){
 			
 			if(!e){
-				var e = $('#gritter-item-' + unique_id);
+				e = $('#gritter-item-' + unique_id);
 			}
 
 			// We set the fourth param to let the _fade function know to 

@@ -108,6 +108,7 @@
 			var title = params.title, 
 				text = params.text,
 				image = params.image || '',
+				image_html = params.image_html || '',
 				sticky = params.sticky || false,
 				item_class = params.class_name || $.gritter.options.class_name,
 				position = $.gritter.options.position,
@@ -133,7 +134,12 @@
 			}
 			
 			var image_str = (image != '') ? '<img src="' + image + '" class="gritter-image" />' : '',
-				class_name = (image != '') ? 'gritter-with-image' : 'gritter-without-image';
+				class_name = (image != '' || image_html != '') ? 'gritter-with-image' : 'gritter-without-image';
+			
+			// Check for custom image html override. If it exists, insert it instead of our generated IMG tag.
+			if(image_html !== ''){
+				image_str = '<div class="gritter-custom-image">' + image_html + '</div>'
+			}
 			
 			// String replacements on the template
 			if(title){

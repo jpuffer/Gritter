@@ -24,7 +24,8 @@
 		class_name: '', // could be set to 'gritter-light' to use white notifications
 		fade_in_speed: 'medium', // how fast notifications fade in
 		fade_out_speed: 1000, // how fast the notices fade out
-		time: 6000 // hang on the screen for...
+		time: 6000, // hang on the screen for...
+		max_to_display: 0 //if not 0, only show this many notifications at once and queue others. 
 	}
 	
 	/**
@@ -34,7 +35,7 @@
 	$.gritter.add = function(params){
 
 		try {
-			return Gritter.add(params || {});
+			return Gritter.addToQueue(params || {});
 		} catch(e) {
 		
 			var err = 'Gritter Error: ' + e;
@@ -82,17 +83,47 @@
 		_tpl_title: '<span class="gritter-title">[[title]]</span>',
 		_tpl_item: '<div id="gritter-item-[[number]]" class="gritter-item-wrapper [[item_class]]" style="display:none" role="alert"><div class="gritter-top"></div><div class="gritter-item">[[close]][[image]]<div class="[[class_name]]">[[title]]<p>[[text]]</p></div><div style="clear:both"></div></div><div class="gritter-bottom"></div></div>',
 		_tpl_wrap: '<div id="gritter-notice-wrapper"></div>',
+		_notificaiton_queue: [],
+		
+		
+		/**
+		* Add a notification to the queue.
+		* @param {Object} params The object that contains all the options for drawing the notification
+		* @return {Integer} The specific numeric id to that gritter notification
+		*/
+		addToQueue: function(params){
+		    // Handle straight text
+			if(typeof(params) === 'string'){
+				params = {text:params};
+			}
+			
+			this._item_count++;
+			this._notificaiton_queue.push($.extend(params, {item_number: this._item_count})); //add this notification to the end of the queue. include its unique id which is the item_count.
+			this._updateDomFromQueue();
+			return this._item_count;
+		},
+		
+		
+		/**
+		* Check whether we can move a notification from the queue onto the DOM.
+		*/
+		_updateDomFromQueue: function(){
+			var maxNotifications = $.gritter.options.max_to_display;
+			var isLimited = maxNotifications > 0; // if maxNotifications is greater than 0, then there is a set limit.
+			if(!isLimited || $('.gritter-item-wrapper').length < maxNotifications){ //no limit or have not reached the max yet
+				if(this._notificaiton_queue.length > 0){ //there's something in the queue to add
+					this._addToDom(this._notificaiton_queue.shift()); //put the first item in the queue onto the dom
+				}
+			}
+		},
 		
 		/**
 		* Add a gritter notification to the screen
 		* @param {Object} params The object that contains all the options for drawing the notification
-		* @return {Integer} The specific numeric id to that gritter notification
 		*/
-		add: function(params){
-			// Handle straight text
-			if(typeof(params) == 'string'){
-				params = {text:params};
-			}
+		_addToDom: function(params){
+		
+			
 
 			// We might have some issues if we don't have a title or text!
 			if(params.text === null){
@@ -116,8 +147,8 @@
 
 			this._verifyWrapper();
 			
-			this._item_count++;
-			var number = this._item_count, 
+			
+			var number = params.item_number, 
 				tmp = this._tpl_item;
 			
 			// Assign callbacks
@@ -150,7 +181,7 @@
 			
 			tmp = this._str_replace(
 				['[[title]]', '[[text]]', '[[close]]', '[[image]]', '[[number]]', '[[class_name]]', '[[item_class]]'],
-				[title, text, this._tpl_close, image_str, this._item_count, class_name, item_class], tmp
+				[title, text, this._tpl_close, image_str, number, class_name, item_class], tmp
 			);
 
 			// If it's false, don't show another gritter message
@@ -160,7 +191,7 @@
 
 			$('#gritter-notice-wrapper').addClass(position).append(tmp);
 			
-			var item = $('#gritter-item-' + this._item_count);
+			var item = $('#gritter-item-' + number);
 			
 			item.fadeIn(this.fade_in_speed, function(){
 				Gritter['_after_open_' + number]($(this));
@@ -190,9 +221,6 @@
 				Gritter.removeSpecific(number, {}, null, true);
 				return false;
 			});
-			
-			return number;
-		
 		},
 		
 		/**
@@ -228,7 +256,8 @@
 			var params = params || {},
 				fade = (typeof(params.fade) != 'undefined') ? params.fade : true,
 				fade_out_speed = params.speed || this.fade_out_speed,
-				manual_close = unbind_events;
+				manual_close = unbind_events,
+				self = this;
 
 			this['_before_close_' + unique_id](e, manual_close);
 			
@@ -245,6 +274,7 @@
 				}, fade_out_speed, function(){
 					e.animate({ height: 0 }, 300, function(){
 						Gritter._countRemoveWrapper(unique_id, e, manual_close);
+						self._updateDomFromQueue();
 					})
 				})
 				
@@ -296,13 +326,12 @@
 		removeSpecific: function(unique_id, params, e, unbind_events){
 			
 			if(!e){
-				var e = $('#gritter-item-' + unique_id);
+				e = $('#gritter-item-' + unique_id);
 			}
 
 			// We set the fourth param to let the _fade function know to 
 			// unbind the "mouseleave" event.  Once you click (X) there's no going back!
 			this._fade(e, unique_id, params || {}, unbind_events);
-			
 		},
 		
 		/**

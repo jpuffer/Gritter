@@ -65,6 +65,12 @@
 		<li>
 			<a href="#" id="unset-max-to-display">Reset Maximum number of notifications.</a> All notifications will show right away.
 		</li>
+    <li>
+			<a href="#" id="pause">Pause Notifications.</a> All notifications will be paused so they cannot timeout.
+		</li>
+    <li>
+			<a href="#" id="unpause">Un-pause Notifications.</a> All notifications will resume their timeout clocks.
+		</li>
 	</ul>
 </div>
 
@@ -88,13 +94,13 @@
 			    max_to_display: 3
 			});
 		});
-		
+
 		$('#unset-max-to-display').click(function(){
 			$.extend($.gritter.options, {
 			    max_to_display: 0
 			});
 		});
-		
+
 		$('#add-sticky').click(function(){
 
 			var unique_id = $.gritter.add({
@@ -158,7 +164,7 @@
 
 			return false;
 		});
-		
+
 		$('#add-custom-image').click(function(){
 
 			$.gritter.add({
@@ -266,6 +272,16 @@
 			return false;
 
 		});
+
+    $("#pause").click(function(){
+      $.gritter.pause();
+      return false;
+    });
+
+    $("#unpause").click(function(){
+      $.gritter.unpause();
+      return false;
+    });
 
 
 	});

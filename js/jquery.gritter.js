@@ -427,6 +427,7 @@
     pause: function(params){
       var self = this;
       self.paused = true;
+      if (!self.timers){ return; }
       $.each(self.timers, function(i, timer){
         timer.paused_at = (new Date().getTime()) - timer.start_time;
         clearTimeout(timer.timeout_id);
@@ -440,7 +441,7 @@
     unpause: function(params){
       var self = this;
       self.paused = false;
-      if (!this.timers){ return; }
+      if (!self.timers){ return; }
       $.each(self.timers, function(i, timer){
         if (timer.paused_at){
           self._setFadeTimer(timer.element, timer.gritter_id, timer.paused_at);

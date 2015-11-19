@@ -429,9 +429,11 @@
       self.paused = true;
       if (!self.timers){ return; }
       $.each(self.timers, function(i, timer){
-        timer.paused_at = (new Date().getTime()) - timer.start_time;
-        clearTimeout(timer.timeout_id);
-        delete timer.timeout_id;
+        if (timer.timeout_id) {
+          timer.paused_at = (new Date().getTime()) - timer.start_time;
+          clearTimeout(timer.timeout_id);
+          delete timer.timeout_id;
+        }
       });
     },
 
@@ -443,11 +445,10 @@
       self.paused = false;
       if (!self.timers){ return; }
       $.each(self.timers, function(i, timer){
-        if (timer.paused_at){
+        if (timer.paused_at !== undefined){
           self._setFadeTimer(timer.element, timer.gritter_id, timer.paused_at);
         }
       });
-
     },
 
 		/**
